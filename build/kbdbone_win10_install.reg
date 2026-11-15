@@ -1,0 +1,9 @@
+﻿Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts\b0020407]
+"Layout Text"="Deutsch (Bone for HP)"
+"Layout File"="kbdbone.dll"
+"Layout Id"="00c2"
+"Layout Display Name"="@%SystemRoot%\\system32\\kbdbone.dll,-1000"
+"Custom Language Name"="German (Germany)"
+"Custom Language Display Name"="@%SystemRoot%\\system32\\kbdbone.dll,-1100"

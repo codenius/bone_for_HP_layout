@@ -1,0 +1,60 @@
+﻿name: Build Bone for HP keyboard layout
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install WDK headers
+        shell: pwsh
+        run: |
+          $nuget = Join-Path $env:RUNNER_TEMP 'nuget.exe'
+          Invoke-WebRequest 'https://dist.nuget.org/win-x86-commandline/latest/nuget.exe' -OutFile $nuget
+          & $nuget install Microsoft.Windows.WDK.x64 -Version 10.0.26100.1 -OutputDirectory (Join-Path $env:RUNNER_TEMP 'wdk') -NonInteractive
+          if ($LASTEXITCODE -ne 0) { throw 'WDK NuGet installation failed' }
+          $header = Get-ChildItem (Join-Path $env:RUNNER_TEMP 'wdk') -Filter kbd.h -Recurse | Select-Object -First 1
+          if (-not $header) { throw 'kbd.h was not found in the WDK package' }
+          New-Item -ItemType Directory -Force inc | Out-Null
+          Copy-Item $header.FullName inc\kbd.h
+
+      - name: Prepare output directories
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force source/kbdbone/x64, source/kbdbone/x86, source/kbdbone/x86-wow64 | Out-Null
+      - name: Build x64 DLL
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - name: Compile x64
+        shell: cmd
+        run: call ..\..\build\build_variant_x64.cmd bone
+        working-directory: source\kbdbone
+
+      - name: Configure x86 compiler
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x86
+      - name: Compile x86 DLLs
+        shell: cmd
+        run: |
+          call ..\..\build\build_variant_x86.cmd bone
+          if errorlevel 1 exit /b 1
+          call ..\..\build\build_variant_x86_wow64.cmd bone
+        working-directory: source\kbdbone
+
+      - name: Upload layout DLLs
+        uses: actions/upload-artifact@v4
+        with:
+          name: bone-for-hp-dlls
+          path: |
+            source/kbdbone/x64/kbdbone.dll
+            source/kbdbone/x86-wow64/kbdbone.dll
+
+
+

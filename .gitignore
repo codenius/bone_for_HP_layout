@@ -1,0 +1,5 @@
+﻿System32/*.dll
+SysWOW64/*.dll
+source/kbdbone/x64/
+source/kbdbone/x86/
+source/kbdbone/x86-wow64/
